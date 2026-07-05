@@ -1,0 +1,49 @@
+name: Bagel Duty Manager Reminder Job
+
+on:
+  schedule:
+    # Run every Saturday at 14:00 UTC (9:00 AM Central / 10:00 AM Eastern)
+    - cron: '0 14 * * 6'
+  workflow_dispatch:
+    # Allows manual triggering from the GitHub Actions tab
+    inputs:
+      target_date:
+        description: 'Optional date override (YYYY-MM-DD)'
+        required: false
+        default: ''
+
+jobs:
+  run-reminders:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Bagel Duty Script
+        env:
+          # Inject secrets from your private GitHub repository settings
+          GROUPME_ACCESS_TOKEN: ${{ secrets.GROUPME_ACCESS_TOKEN }}
+          GROUPME_GROUP_ID: ${{ secrets.GROUPME_GROUP_ID }}
+          ADMIN_USER_ID: ${{ secrets.ADMIN_USER_ID }}
+          BOT_ID: ${{ secrets.BOT_ID }}
+          SLOTS_URL: ${{ secrets.SLOTS_URL || 'https://docs.google.com/spreadsheets/d/1rYFZR8L2WJPEvFbSSr5lk6KLdGsnlHvOZMeQc5jC5DA/export?format=xlsx' }}
+          SLOTS_SHEET_NAME: 'Summer 26'
+          USE_GOOGLE_SHEET: 'true'
+        run: |
+          # Use manual date override input if provided, otherwise runs for upcoming Sunday
+          if [ "${{ github.event.inputs.target_date }}" != "" ]; then
+            python src/main.py "${{ github.event.inputs.target_date }}"
+          else
+            python src/main.py
+          fi
