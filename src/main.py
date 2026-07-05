@@ -49,12 +49,21 @@ def match_signup_to_groupme_user(signup_name, members):
 
     return None, None
 
+def format_display_date(date_str):
+    """Converts a YYYY-MM-DD date string to a Month DD, YYYY display string."""
+    try:
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        return date_obj.strftime("%B %d, %Y")
+    except Exception:
+        return date_str
+
 def format_group_reminders(filled_assignments, target_date, members):
     """
     Formats a single message reminding all matched volunteers and builds GroupMe mentions.
     Returns: (text_message, attachments, reminded_count, missing_users)
     """
-    text_lines = [f"Volunteer Reminders for Sunday {target_date}!"]
+    display_date = format_display_date(target_date)
+    text_lines = [f"Volunteer Reminders for Sunday {display_date}:"]
     user_ids = []
     loci = []
     reminded_count = 0
@@ -149,10 +158,12 @@ def run_workflow(target_date=None):
             # Fallback to report all matched names as errors to admin if bot failed
             missing_account_users.extend([f"{a['signup_name']} (Bot Error: {e})" for a in filled_assignments if a["signup_name"] not in missing_account_users])
 
+    display_date = format_display_date(target_date)
+
     # 6. Alert Group Chat for vacant slots via Bot Post
     if vacant_slots:
         print("Vacant slots found. Preparing group alert...")
-        alert_lines = [f"We still need volunteers for this Sunday {target_date}!"]
+        alert_lines = [f"We still need volunteers for this Sunday {display_date}:"]
         for vs in vacant_slots:
             alert_lines.append(f"• {vs['slot']}")
         alert_lines.append("\nPlease sign up if you can make it! 🥯")
@@ -173,7 +184,7 @@ def run_workflow(target_date=None):
             admin_notif_lines.append(f"  - {name}")
 
     if admin_notif_lines and config.ADMIN_USER_ID and config.ADMIN_USER_ID != "your_user_id_here":
-        admin_msg = f"Bagel Duty Manager Report for {target_date}:\n" + "\n".join(admin_notif_lines)
+        admin_msg = f"Bagel Duty Manager Report for {display_date}:\n" + "\n".join(admin_notif_lines)
         try:
             print("Sending report DM to admin Owen...")
             client.send_dm(config.ADMIN_USER_ID, admin_msg)
