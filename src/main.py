@@ -54,7 +54,7 @@ def format_group_reminders(filled_assignments, target_date, members):
     Formats a single message reminding all matched volunteers and builds GroupMe mentions.
     Returns: (text_message, attachments, reminded_count, missing_users)
     """
-    text_lines = [f"🥯 Volunteer Reminders for Sunday {target_date}! 🥯"]
+    text_lines = [f"Volunteer Reminders for Sunday {target_date}!"]
     user_ids = []
     loci = []
     reminded_count = 0
@@ -152,10 +152,10 @@ def run_workflow(target_date=None):
     # 6. Alert Group Chat for vacant slots via Bot Post
     if vacant_slots:
         print("Vacant slots found. Preparing group alert...")
-        alert_lines = [f"🥯 We still need volunteers for this Sunday {target_date}! 🥯"]
+        alert_lines = [f"We still need volunteers for this Sunday {target_date}!"]
         for vs in vacant_slots:
             alert_lines.append(f"• {vs['slot']}")
-        alert_lines.append("\nPlease sign up if you can make it!")
+        alert_lines.append("\nPlease sign up if you can make it! 🥯")
         group_msg = "\n".join(alert_lines)
 
         try:
